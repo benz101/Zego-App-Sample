@@ -61,8 +61,8 @@ class LiveAudioRoomPageState extends State<LiveAudioRoomPage> {
         child: Stack(
           children: [
             ZegoUIKitPrebuiltLiveAudioRoom(
-              appID: 0 /*input your AppID*/,
-              appSign: '' /*input your AppSign*/,
+              appID: appID /*input your AppID*/,
+              appSign: appSign /*input your AppSign*/,
               userID: widget.userID,
               userName: widget.userName,
               roomID: widget.roomID,

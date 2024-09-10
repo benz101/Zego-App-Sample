@@ -62,13 +62,13 @@ class InRoomGameController {
         },
         onLoadStop: (controller, url) async {
           final token = await YourGameServer().getToken(
-            appID: 0,
+            appID: appID,
             userID: userID,
             serverSecret: '',
           );
 
           await ZegoMiniGame().initGameSDK(
-            appID: 0,
+            appID: appID,
             token: token,
             userID: userID,
             userName: userName,
@@ -164,7 +164,7 @@ class InRoomGameController {
     }
     try {
       final exchangeUserCurrencyResult = await YourGameServer().exchangeUserCurrency(
-        appID: 0,
+        appID: appID,
         gameID: gameID,
         userID: userID,
         exchangeValue: 100,
@@ -176,7 +176,7 @@ class InRoomGameController {
     }
     try {
       final getUserCurrencyResult = await YourGameServer().getUserCurrency(
-        appID: 0,
+        appID: appID,
         userID: userID,
         gameID: gameID,
       );

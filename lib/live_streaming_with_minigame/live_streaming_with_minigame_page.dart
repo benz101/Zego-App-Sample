@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:zego_app_sample/helper/common.dart';
+import 'package:zego_app_sample/helper/constants.dart';
 import 'package:zego_uikit_prebuilt_live_streaming/zego_uikit_prebuilt_live_streaming.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 
@@ -51,8 +52,8 @@ class LiveStreamingWithMiniGamePageState extends State<LiveStreamingWithMiniGame
         child: Stack(
           children: [
             ZegoUIKitPrebuiltLiveStreaming(
-                appID: 0 /*input your AppID*/,
-                appSign: '' /*input your AppSign*/,
+                appID: appID /*input your AppID*/,
+                appSign: appSign /*input your AppSign*/,
                 userID: '',
                 userName: '',
                 liveID: widget.liveID,
@@ -72,13 +73,13 @@ class LiveStreamingWithMiniGamePageState extends State<LiveStreamingWithMiniGame
                 },
                 onLoadStop: (controller, url) async {
                   final token = await YourGameServer().getToken(
-                    appID: 0,
+                    appID: appID,
                     userID: '',
                     serverSecret: '',
                   );
 
                   await ZegoMiniGame().initGameSDK(
-                    appID: 0,
+                    appID: appID,
                     token: token,
                     userID: '',
                     userName: '',
@@ -132,7 +133,7 @@ class LiveStreamingWithMiniGamePageState extends State<LiveStreamingWithMiniGame
                     }
                     try {
                       final exchangeUserCurrencyResult = await YourGameServer().exchangeUserCurrency(
-                        appID: 0,
+                        appID: appID,
                         gameID: gameID,
                         userID: '',
                         exchangeValue: 10000,
@@ -144,7 +145,7 @@ class LiveStreamingWithMiniGamePageState extends State<LiveStreamingWithMiniGame
                     }
                     try {
                       final getUserCurrencyResult = await YourGameServer().getUserCurrency(
-                        appID: 0,
+                        appID: appID,
                         userID: '',
                         gameID: gameID,
                       );

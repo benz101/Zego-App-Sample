@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:zego_app_sample/helper/constants.dart';
 import 'package:zego_uikit_prebuilt_live_streaming/zego_uikit_prebuilt_live_streaming.dart';
 
 
@@ -51,11 +52,11 @@ class ZegoMiniGamePageState extends State<ZegoMiniGamePage> {
                 onLoadStop: (controller, url) async {
                   try {
                     final token = await YourGameServer().getToken(
-                      appID: 0,
+                      appID: appID,
                       userID: widget.userID,
                     );
                     await ZegoMiniGame().initGameSDK(
-                      appID: 0,
+                      appID: appID,
                       token: token,
                       userID: widget.userID,
                       userName: widget.userName,
@@ -102,7 +103,7 @@ class ZegoMiniGamePageState extends State<ZegoMiniGamePage> {
                             try {
                               debugPrint('[APP]enter game: $gameID');
                               final exchangeUserCurrencyResult = await YourGameServer().exchangeUserCurrency(
-                                appID: 0,
+                                appID: appID,
                                 gameID: gameID,
                                 userID: widget.userID,
                                 exchangeValue: 10000,
@@ -114,7 +115,7 @@ class ZegoMiniGamePageState extends State<ZegoMiniGamePage> {
                             }
                             try {
                               final getUserCurrencyResult = await YourGameServer().getUserCurrency(
-                                appID: 0,
+                                appID: appID,
                                 userID: widget.userID,
                                 gameID: gameID,
                               );

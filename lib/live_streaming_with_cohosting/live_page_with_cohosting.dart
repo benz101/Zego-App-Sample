@@ -56,8 +56,8 @@ class LivePageWithCohostingState extends State<LivePageWithCohosting> {
 
     return SafeArea(
       child: ZegoUIKitPrebuiltLiveStreaming(
-        appID: 0 /*input your AppID*/,
-        appSign: '' /*input your AppSign*/,
+        appID: appID /*input your AppID*/,
+        appSign: appSign /*input your AppSign*/,
         userID: '',
         userName: 'user_$localUserID',
         liveID: widget.liveID,
