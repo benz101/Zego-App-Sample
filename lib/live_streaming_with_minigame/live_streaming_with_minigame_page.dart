@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:zego_app_sample/helper/common.dart';
 import 'package:zego_app_sample/helper/constants.dart';
@@ -11,33 +12,27 @@ import 'minigame/your_game_server.dart';
 
 class LiveStreamingWithMiniGamePage extends StatefulWidget {
   final String liveID;
-  final bool isHost;
-  // final String userID;
-  // final String userName;
 
-  const LiveStreamingWithMiniGamePage({
-    super.key,
-    required this.liveID,
-    // required this.userID,
-    // required this.userName,
-    this.isHost = false,
-  });
+  const LiveStreamingWithMiniGamePage({super.key, required this.liveID});
 
   @override
   State<StatefulWidget> createState() => LiveStreamingWithMiniGamePageState();
 }
 
-class LiveStreamingWithMiniGamePageState extends State<LiveStreamingWithMiniGamePage> {
+class LiveStreamingWithMiniGamePageState
+    extends State<LiveStreamingWithMiniGamePage> {
   final liveStreamingStateNotifier = ValueNotifier(ZegoLiveStreamingState.idle);
   bool playing = false;
 
   @override
+  void dispose() {
+    ZegoUIKit().leaveRoom();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final hostConfig = ZegoUIKitPrebuiltLiveStreamingConfig.host(
-      plugins: [ZegoUIKitSignalingPlugin()],
-    );
-
-    final audienceConfig = ZegoUIKitPrebuiltLiveStreamingConfig.audience(
       plugins: [ZegoUIKitSignalingPlugin()],
     );
 
@@ -49,51 +44,92 @@ class LiveStreamingWithMiniGamePageState extends State<LiveStreamingWithMiniGame
         return true;
       },
       child: SafeArea(
-        child: Stack(
-          children: [
-            ZegoUIKitPrebuiltLiveStreaming(
-                appID: appID /*input your AppID*/,
-                appSign: appSign /*input your AppSign*/,
-                userID: '',
-                userName: '',
-                liveID: widget.liveID,
-                events: ZegoUIKitPrebuiltLiveStreamingEvents(
-                  onStateUpdated: (state) =>
-                      liveStreamingStateNotifier.value = state,
+        child: Scaffold(
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.white,
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 50,
+                      color: Colors.white,
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Your Live ID: ${widget.liveID}'),
+                            const SizedBox(width: 5),
+                            IconButton(
+                                onPressed: () async {
+                                  Fluttertoast.showToast(
+                                      msg: 'Live ID has been copied');
+                                  await Clipboard.setData(
+                                      ClipboardData(text: widget.liveID));
+                                  // copied successfully
+                                },
+                                icon: const Icon(Icons.copy)),
+                            IconButton(
+                                onPressed: () => shareTo(
+                                    param:
+                                        'This live id of host: ${widget.liveID}'),
+                                icon: const Icon(Icons.share)),
+                          ]),
+                    ),
+                    Expanded(
+                      child: ZegoUIKitPrebuiltLiveStreaming(
+                          appID: appID, // Your App ID
+                          appSign: appSign, // Your App Sign
+                          userID: localUserID,
+                          userName: 'user_$localUserID',
+                          liveID: widget.liveID,
+                          events: ZegoUIKitPrebuiltLiveStreamingEvents(
+                            onStateUpdated: (state) =>
+                                liveStreamingStateNotifier.value = state,
+                          ),
+                          config: hostConfig
+                            ..avatarBuilder = customAvatarBuilder
+                            ..audioVideoView.useVideoViewAspectFill = false),
+                    ),
+                  ],
                 ),
-                config: (widget.isHost ? hostConfig : audienceConfig)
-                  ..avatarBuilder = customAvatarBuilder
-                  ..audioVideoView.useVideoViewAspectFill = false),
-            Offstage(
-              offstage: !playing,
-              child: InAppWebView(
-                initialFile: 'assets/minigame/index.html',
-                onWebViewCreated: (InAppWebViewController controller) async {
-                  ZegoMiniGame().initWebViewController(controller);
-                },
-                onLoadStop: (controller, url) async {
-                  final token = await YourGameServer().getToken(
-                    appID: appID,
-                    userID: '',
-                    serverSecret: '',
-                  );
+                Offstage(
+                  offstage: !playing,
+                  child: InAppWebView(
+                    initialFile: 'assets/minigame/index.html',
+                    onWebViewCreated:
+                        (InAppWebViewController controller) async {
+                      ZegoMiniGame().initWebViewController(controller);
+                    },
+                    onLoadStop: (controller, url) async {
+                      final token = await YourGameServer().getToken(
+                        appID: appID, // Your App ID
+                        userID: localUserID,
+                        serverSecret: '',
+                      );
 
-                  await ZegoMiniGame().initGameSDK(
-                    appID: appID,
-                    token: token,
-                    userID: '',
-                    userName: '',
-                    avatarUrl: Uri.encodeComponent('https://robohash.org/${''}.png?set=set4'),
-                    language: GameLanguage.english,
-                  );
-                },
-                onConsoleMessage: (controller, ConsoleMessage msg) async {
-                  debugPrint('[InAppWebView][${msg.messageLevel}]${msg.message}');
-                },
-              ),
+                      await ZegoMiniGame().initGameSDK(
+                        appID: appID,
+                        token: token,
+                        userID: localUserID,
+                        userName: 'user_$localUserID',
+                        avatarUrl: Uri.encodeComponent(
+                            'https://robohash.org/$localUserID.png?set=set4'),
+                        language: GameLanguage.english,
+                      );
+                    },
+                    onConsoleMessage: (controller, ConsoleMessage msg) async {
+                      debugPrint(
+                          '[InAppWebView][${msg.messageLevel}]${msg.message}');
+                    },
+                  ),
+                ),
+                gameButton(),
+              ],
             ),
-            gameButton(),
-          ],
+          ),
         ),
       ),
     );
@@ -123,35 +159,45 @@ class LiveStreamingWithMiniGamePageState extends State<LiveStreamingWithMiniGame
                     try {
                       final loadGameResult = await ZegoMiniGame().loadGame(
                         gameID: gameID,
-                        gameMode: ZegoGameMode.values.where((element) => element.value == gameMode[0]).first,
-                        loadGameConfig: ZegoLoadGameConfig(minGameCoin: 0, roomID: widget.liveID, useRobot: true),
+                        gameMode: ZegoGameMode.values
+                            .where((element) => element.value == gameMode[0])
+                            .first,
+                        loadGameConfig: ZegoLoadGameConfig(
+                            minGameCoin: 0,
+                            roomID: widget.liveID,
+                            useRobot: true),
                       );
                       debugPrint('[APP]loadGame: $loadGameResult');
                       setState(() => playing = true);
                     } catch (e) {
-                      Fluttertoast.showToast(msg:'getUserCurrency:$e');
+                      Fluttertoast.showToast(msg: 'getUserCurrency:$e');
                     }
                     try {
-                      final exchangeUserCurrencyResult = await YourGameServer().exchangeUserCurrency(
+                      final exchangeUserCurrencyResult =
+                          await YourGameServer().exchangeUserCurrency(
                         appID: appID,
                         gameID: gameID,
-                        userID: '',
+                        userID: 'user_$localUserID',
                         exchangeValue: 10000,
-                        outOrderId: DateTime.now().millisecondsSinceEpoch.toString(),
+                        outOrderId:
+                            DateTime.now().millisecondsSinceEpoch.toString(),
                       );
-                      debugPrint('[APP]exchangeUserCurrencyResult: $exchangeUserCurrencyResult');
+                      debugPrint(
+                          '[APP]exchangeUserCurrencyResult: $exchangeUserCurrencyResult');
                     } catch (e) {
-                      Fluttertoast.showToast(msg:'exchangeUserCurrency:$e');
+                      Fluttertoast.showToast(msg: 'exchangeUserCurrency:$e');
                     }
                     try {
-                      final getUserCurrencyResult = await YourGameServer().getUserCurrency(
+                      final getUserCurrencyResult =
+                          await YourGameServer().getUserCurrency(
                         appID: appID,
-                        userID: '',
+                        userID: 'user_$localUserID',
                         gameID: gameID,
                       );
-                      debugPrint('[APP]getUserCurrencyResult: $getUserCurrencyResult');
+                      debugPrint(
+                          '[APP]getUserCurrencyResult: $getUserCurrencyResult');
                     } catch (e) {
-                      Fluttertoast.showToast(msg:'getUserCurrency:$e');
+                      Fluttertoast.showToast(msg: 'getUserCurrency:$e');
                     }
                   }
                 });
@@ -161,7 +207,9 @@ class LiveStreamingWithMiniGamePageState extends State<LiveStreamingWithMiniGame
               }
             },
             label: playing ? const Text('Quit Game') : const Text('Game List'),
-            icon: playing ? const Icon(Icons.arrow_back) : const Icon(Icons.games),
+            icon: playing
+                ? const Icon(Icons.arrow_back)
+                : const Icon(Icons.games),
           ),
         );
       },

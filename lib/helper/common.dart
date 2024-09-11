@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:zego_uikit_prebuilt_live_streaming/zego_uikit_prebuilt_live_streaming.dart';
 
 Widget customAvatarBuilder(
@@ -34,3 +35,7 @@ Widget customAvatarBuilder(
     },
   );
 }
+
+Future<void> shareTo({required String param}) async {
+        await Share.share(param);
+  }
